@@ -46,7 +46,8 @@ export class MealPlanResolver {
 
     // We'll use 10% as the food budget number, based on reporting from the USDA Economic Research Service
     // We'll assume 3 meals a day, 7 days a week
-    const perDaySpend = (netPayInCents * 0.1) / 7;
+    const perWeekSpend = netPayInCents * 0.1;
+    const perDaySpend = perWeekSpend / 7;
     const perMealSpend = perDaySpend / 3;
     const eligibleMeals = recipeCosts.filter(r => r.recipeCost <= perMealSpend);
 
@@ -62,7 +63,8 @@ export class MealPlanResolver {
 
     const costLookup = new Map(recipeCosts.map(c => [c.r_id, c.recipeCost]));
     const result = new MealPlan(
-      meals.map(m => [m.r_id, costLookup.get(m.r_id) || 0])
+      meals.map(m => [m.r_id, costLookup.get(m.r_id) || 0]),
+      perWeekSpend
     );
     return result;
   }

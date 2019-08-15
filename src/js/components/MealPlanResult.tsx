@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import gql from 'graphql-tag';
 import { Query } from 'react-apollo';
 import moment from 'moment';
@@ -12,6 +12,7 @@ interface Props {
 interface RecipeInfo {
   id: string;
   name: string;
+  costInCents: number;
 }
 
 interface MealPlanQueryResult {
@@ -25,6 +26,7 @@ interface MealPlanQueryResult {
     day7Meals: RecipeInfo[];
     summary: {
       totalCostInCents: number;
+      perWeekSpendInCents: number;
     };
   };
 }
@@ -35,45 +37,49 @@ interface MealPlanQueryVariables {
 }
 
 const mealPlanQuery = gql`
+  fragment DayMeals on Recipe {
+    id
+    name
+    costInCents
+  }
+
   query MealPlanQuery($netPayInCents: Int!, $restrictionTags: [ID!]!) {
     mealPlan(netPayInCents: $netPayInCents, restrictionTags: $restrictionTags) {
       day1Meals {
-        id
-        name
+        ...DayMeals
       }
       day2Meals {
-        id
-        name
+        ...DayMeals
       }
       day3Meals {
-        id
-        name
+        ...DayMeals
       }
       day4Meals {
-        id
-        name
+        ...DayMeals
       }
       day5Meals {
-        id
-        name
+        ...DayMeals
       }
       day6Meals {
-        id
-        name
+        ...DayMeals
       }
       day7Meals {
-        id
-        name
+        ...DayMeals
       }
       summary {
         totalCostInCents
+        perWeekSpendInCents
       }
     }
   }
 `;
 
 const MealPlanResult: React.FC<Props> = ({ netPayPerWeek, restrictionIds }) => {
-  const [visibleRecipe, setVisibleRecipe] = useState<string>();
+  const [visibleRecipe, setVisibleRecipe] = useState<string | null>();
+
+  useEffect(() => {
+    setVisibleRecipe(null);
+  }, [netPayPerWeek, restrictionIds]);
 
   return (
     <Query<MealPlanQueryResult, MealPlanQueryVariables>
@@ -96,7 +102,14 @@ const MealPlanResult: React.FC<Props> = ({ netPayPerWeek, restrictionIds }) => {
         if (data && data.mealPlan) {
           return (
             <React.Fragment>
-              Total Cost: ${data.mealPlan.summary.totalCostInCents / 100}
+              <div>
+                Budget: $
+                {(data.mealPlan.summary.perWeekSpendInCents / 100).toFixed(2)}
+              </div>
+              <div>
+                Total Cost: $
+                {(data.mealPlan.summary.totalCostInCents / 100).toFixed(2)}
+              </div>
               {Object.keys(data.mealPlan).map((k, i) => {
                 if (!((data.mealPlan as any)[k] instanceof Array)) {
                   return null;
@@ -113,12 +126,14 @@ const MealPlanResult: React.FC<Props> = ({ netPayPerWeek, restrictionIds }) => {
                               href="#"
                               onClick={e => {
                                 e.preventDefault();
-                                setVisibleRecipe(`${k}_${r.id}`);
+                                setVisibleRecipe(`${k}_${r.id}_${i}`);
                               }}
                             >
-                              <div>{r.name}</div>
+                              <div>
+                                {r.name} - ${(r.costInCents / 100).toFixed(2)}
+                              </div>
                             </a>
-                            {visibleRecipe === `${k}_${r.id}` ? (
+                            {visibleRecipe === `${k}_${r.id}_${i}` ? (
                               <React.Fragment>
                                 Ingredients:
                                 <RecipeDetail recipeId={r.id} />
