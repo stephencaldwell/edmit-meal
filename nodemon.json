@@ -1,0 +1,7 @@
+{
+  "verbose": true,
+  "ext": "ts",
+  "execMap": {
+    "ts": "ts-node --project tsconfig.json --pretty"
+  }
+}
