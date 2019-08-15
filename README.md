@@ -4,7 +4,7 @@ You'll want to first import the edmit-meal-database.sql into a mysql database.
 
 The connection values are hard coded into ./src/lib/db.ts, but it by default expects a server located on localhost, on the default port, with a root user with no password. -- In the real world this would be _very_ different.
 
-From the root of the workspace, you'll want to run `yarn install`, and then `yarn dev`.
+From the root of the workspace, you'll want to run `yarn install`, `yarn webpack` to build the SPA, and then `yarn dev` to serve the application.
 
 From there you can then visit http://localhost:8080.
 
